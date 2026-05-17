@@ -1,0 +1,176 @@
+[index.html](https://github.com/user-attachments/files/27897580/index.html)
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우리아이 예방접종 케어</title>
+    <style>
+        /* CSS는 기존과 동일하게 유지 */
+        body { font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 20px; background-color: #f0f4f8; }
+        .container { max-width: 480px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .btn { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; background-color: #4A90E2; color: white; font-weight: bold; }
+        .btn-teal { background-color: #2D6A4F; }
+        .btn-text { background: none; border: none; color: #4A90E2; font-weight: bold; cursor: pointer; font-size: 15px; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .input-group { margin-bottom: 15px; }
+        .input-group input { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px; }
+        .info-box { background-color: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; border-left: 4px solid #4A90E2; }
+        .alert-box { background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; }
+        .list-box { border: 1px solid #eee; padding: 10px; border-radius: 10px; max-height: 180px; overflow-y: auto; background: #fff; }
+        .list-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f9f9f9; }
+        .main-img { width: 140px; height: auto; margin: 10px auto; display: block; }
+        .info-img { width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="homeScreen" class="screen active">
+        <div class="header">
+            <h2>예방접종 도우미</h2>
+            <button id="loginStatusBtn" class="btn-text" onclick="handleAuthHeaderBtn()">로그인</button>
+        </div>
+        
+        <img src="https://i.postimg.cc/wjYgxZzP/IMG-6970.png" alt="캐릭터" class="main-img">
+
+        <div id="userInfoBox" class="info-box">🔒 서비스를 이용하려면 로그인해주세요.</div>
+        <div id="smsAlertBox" class="alert-box"></div>
+        
+        <div id="ddaySection" style="display:none; margin-bottom: 20px;">
+            <span style="font-weight:bold;">📅 접종 디데이 현황</span>
+            <div id="ddayListBox" class="list-box"></div>
+        </div>
+
+        <button class="btn" onclick="navigateTo('registerScreen')">우리 아이 등록</button>
+        <button class="btn" onclick="navigateTo('imageScreen')">국가 예방 접종 안내</button>
+        <button class="btn" onclick="navigateTo('diseaseScreen')">질병 정보 목록</button>
+        <button class="btn btn-teal" onclick="window.open('https://www.kdca.go.kr/kdca/index.do', '_blank')">질병관리청 바로가기</button>
+    </div>
+
+    <div id="loginScreen" class="screen">
+        <h3>로그인</h3>
+        <div class="input-group"><input type="text" id="loginPhone" placeholder="전화번호"></div>
+        <div class="input-group"><input type="password" id="loginPw" placeholder="비밀번호"></div>
+        <button class="btn" onclick="submitLogin()">로그인 완료</button>
+        <button class="btn-text" onclick="navigateTo('signupScreen')">회원가입</button>
+    </div>
+
+    <div id="signupScreen" class="screen">
+        <h3>회원가입</h3>
+        <div class="input-group"><input type="text" id="joinPhone" placeholder="전화번호"></div>
+        <div class="input-group"><input type="password" id="joinPw" placeholder="비밀번호"></div>
+        <div class="input-group"><input type="password" id="joinPwConfirm" placeholder="비밀번호 확인"></div>
+        <button class="btn" onclick="submitSignup()">가입 완료</button>
+    </div>
+
+    <div id="registerScreen" class="screen">
+        <h3>우리 아이 등록</h3>
+        <div class="input-group"><input type="text" id="childName" placeholder="아이 이름"></div>
+        <div class="input-group"><input type="date" id="childBirth"></div>
+        <button class="btn" onclick="submitChild()">등록하기</button>
+        <div id="calendarSection" style="display:none; margin-top:20px;">
+            <div id="calendarListBox" class="list-box" style="max-height: 250px;"></div>
+        </div>
+        <button class="btn-text" onclick="navigateTo('homeScreen')">🏠 홈으로</button>
+    </div>
+
+    <div id="imageScreen" class="screen">
+        <h3>국가 예방 접종 안내</h3>
+        <img src="https://i.postimg.cc/D0tFXYXn/IMG-6968.jpg" alt="안내 이미지" class="info-img">
+        <button class="btn" onclick="navigateTo('homeScreen')">닫기</button>
+    </div>
+
+    <div id="diseaseScreen" class="screen">
+        <h3>질병 정보 목록</h3>
+        <div id="diseaseListBox" class="list-box" style="max-height: 400px;"></div>
+        <button class="btn" onclick="navigateTo('homeScreen')">닫기</button>
+    </div>
+</div>
+
+<script>
+    /* 자바스크립트 로직은 이전과 동일 */
+    const vaccineDb = [
+        { d: '결핵(BCG)', r: '1차', m: 0 }, { d: 'B형간염', r: '1차', m: 0 }, { d: 'B형간염', r: '2차', m: 1 }, { d: 'B형간염', r: '3차', m: 6 },
+        { d: 'DTaP', r: '1차', m: 2 }, { d: 'DTaP', r: '2차', m: 4 }, { d: 'DTaP', r: '3차', m: 6 },
+        { d: '폴리오', r: '1차', m: 2 }, { d: '폴리오', r: '2차', m: 4 }, { d: '폴리오', r: '3차', m: 6 },
+        { d: 'MMR', r: '1차', m: 12 }, { d: '수두', r: '1차', m: 12 }, { d: '일본뇌염', r: '1차', m: 12 }
+    ];
+
+    let userDb = {}; let loggedInUser = null; let registeredChild = null;
+
+    function navigateTo(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function handleAuthHeaderBtn() {
+        if (loggedInUser) { loggedInUser = null; registeredChild = null; updateHome(); } 
+        else navigateTo('loginScreen');
+    }
+
+    function submitSignup() {
+        const p = document.getElementById('joinPhone').value;
+        const pw = document.getElementById('joinPw').value;
+        userDb[p] = pw; alert('가입 완료!'); navigateTo('loginScreen');
+    }
+
+    function submitLogin() {
+        const p = document.getElementById('loginPhone').value;
+        const pw = document.getElementById('loginPw').value;
+        if(userDb[p] === pw) { loggedInUser = p; updateHome(); navigateTo('homeScreen'); }
+        else alert('정보 오류');
+    }
+
+    function submitChild() {
+        const n = document.getElementById('childName').value;
+        const b = document.getElementById('childBirth').value;
+        registeredChild = { name: n, birth: new Date(b) };
+        const cal = document.getElementById('calendarListBox');
+        cal.innerHTML = '';
+        vaccineDb.forEach(v => {
+            let d = new Date(registeredChild.birth); d.setMonth(d.getMonth() + v.m);
+            cal.innerHTML += `<div class="list-item"><span>${v.d}</span><b>${d.toLocaleDateString()}</b></div>`;
+        });
+        document.getElementById('calendarSection').style.display = 'block';
+        updateHome();
+    }
+
+    function updateHome() {
+        const info = document.getElementById('userInfoBox');
+        const dsec = document.getElementById('ddaySection');
+        const dlist = document.getElementById('ddayListBox');
+        const alertBox = document.getElementById('smsAlertBox');
+        if(loggedInUser) {
+            document.getElementById('loginStatusBtn').innerText = '로그아웃';
+            if(registeredChild) {
+                info.innerHTML = `👶 <strong>${registeredChild.name}</strong> 등록됨`;
+                let dhtml = '', shtml = '';
+                const today = new Date(); today.setHours(0,0,0,0);
+                vaccineDb.forEach(v => {
+                    let target = new Date(registeredChild.birth); target.setMonth(target.getMonth() + v.m);
+                    let diff = Math.ceil((target - today) / (1000*60*60*24));
+                    if(diff >= 0) {
+                        dhtml += `<div class="list-item"><span>${v.d}</span><b style="color:red;">D-${diff==0?'Day':diff}</b></div>`;
+                        if(diff <= 7) shtml += `🔔 ${v.d} 접종 ${diff}일 전!<br>`;
+                    }
+                });
+                dlist.innerHTML = dhtml; dsec.style.display = 'block';
+                if(shtml) { alertBox.innerHTML = shtml; alertBox.style.display = 'block'; }
+            } else { info.innerText = "아이를 등록하세요."; dsec.style.display = 'none'; }
+        } else {
+            document.getElementById('loginStatusBtn').innerText = '로그인';
+            info.innerText = "🔒 로그인이 필요합니다."; dsec.style.display = 'none'; alertBox.style.display = 'none';
+        }
+    }
+    
+    // 초기 질병 목록 생성
+    const dBox = document.getElementById('diseaseListBox');
+    ["결핵", "B형간염", "디프테리아", "폴리오", "수두", "홍역"].forEach(n => {
+        dBox.innerHTML += `<div class="list-item"><span>${n}</span><small>상세정보</small></div>`;
+    });
+</script>
+</body>
+</html>
